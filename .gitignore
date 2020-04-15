@@ -127,3 +127,9 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# Ignore scripts
+sh/
+
+# Ignore confidential account information
+src/account.txt
