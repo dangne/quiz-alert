@@ -13,11 +13,8 @@ def main():
         # Access login page
         login_page = LoginPage(ses)
 
-        # Login to E-learning
+        # Login to E-learning and start scanning
         myel = MyELearning(ses, login_page.login(account))
-
-        # Perform scanning
-        myel.get_summary()
 
 
 
