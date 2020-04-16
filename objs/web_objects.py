@@ -1,6 +1,6 @@
 import requests
 import re
-import colors
+import objs.colors as colors
 from bs4 import BeautifulSoup
 from datetime import datetime
 
@@ -128,12 +128,12 @@ class MyELearning:
             print(course.name)
             for quiz in course.quizzes:
                 color = colors.GREEN if quiz.status == 'Submitted' else colors.YELLOW
-                print(f'\t{color}Quiz | {str(quiz.status):13} | Due: {str(quiz.due):20} | {quiz.name}')
+                print(f'\t{color}Quiz | {str(quiz.status):13} | Due: {str(quiz.due):19} | {quiz.name}')
                 print(colors.DEFAULT, end='')
 
             for assm in course.assignments:
                 color = colors.GREEN if assm.status == 'Submitted' else colors.YELLOW
-                print(f'\t{color}Assm | {str(assm.status):13} | Due: {str(assm.due):20} | {assm.name}')
+                print(f'\t{color}Assm | {str(assm.status):13} | Due: {str(assm.due):19} | {assm.name}')
                 print(colors.DEFAULT, end='')
 
 

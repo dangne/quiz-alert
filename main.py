@@ -1,6 +1,6 @@
 import requests
-from account import Account
-from obj import * 
+from objs.account import * 
+from objs.web_objects import * 
 
 
 

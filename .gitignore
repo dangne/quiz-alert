@@ -132,4 +132,4 @@ dmypy.json
 sh/
 
 # Ignore confidential account information
-src/account.txt
+objs/account.txt
