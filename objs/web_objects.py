@@ -60,7 +60,9 @@ class Quiz:
 
     def show(self):
         color = STATUS_COLOR[self.status]
-        print(f'\t\t{color}Quiz | {str(self.status):13} | Due: {str(self.due):19} | {self.name}{colors.DEFAULT}')
+        output = ' '*4 + f'{color}Quiz | {str(self.status):13} | Due: {str(self.due):19} | {self.name}'
+        output = (output[:110] + '..') if len(output) > 110 else output 
+        print(output + colors.DEFAULT)
     
 
 
@@ -100,7 +102,9 @@ class Assignment:
 
     def show(self):
         color = STATUS_COLOR[self.status]
-        print(f'\t\t{color}Assm | {str(self.status):13} | Due: {str(self.due):19} | {self.name}{colors.DEFAULT}')
+        output = ' '*4 + f'{color}Assm | {str(self.status):13} | Due: {str(self.due):19} | {self.name}'
+        output = (output[:110] + '..') if len(output) > 110 else output 
+        print(output + colors.DEFAULT)
         
 
 
@@ -120,7 +124,7 @@ class Course:
         # Extract quizzes
         quizzes = soup.find_all('li', class_='activity quiz modtype_quiz')
         if len(quizzes) > 0 and not print_flag:
-            print(f'\t{self.name}')
+            print(' '*2 + f'{self.name}')
             print_flag = True
 
         for quiz in quizzes:
@@ -132,7 +136,7 @@ class Course:
         # Extract assignments
         assignments = soup.find_all('li', class_='activity assign modtype_assign')
         if len(assignments) > 0 and not print_flag:
-            print(f'\t{self.name}')
+            print(' '*2 + f'{self.name}')
             print_flag = True
 
         for assignment in assignments:
@@ -142,7 +146,7 @@ class Course:
             self.assignments.append(Assignment(assignment_html, assignment_name))
 
     def show(self):
-        print(self.name)
+        print(' '*2 + f'{self.name}')
         for quiz in self.quizzes: quiz.show()
         for assm in self.assignments: assm.show()
 
