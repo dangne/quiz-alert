@@ -4,7 +4,7 @@ import os
 
 class Account:
 
-    def __init__(self, filename='account.txt'):
+    def __init__(self, filename='objs/account.txt'):
         self.username = None
         self.password = None
         self.filename = filename
@@ -19,7 +19,7 @@ class Account:
         self.username = input('Your username: ')
         self.password = input('Your password: ')
         self.save_account()
-        print('-'*34)
+        print('-'*36)
 
     def save_account(self):
         try:

@@ -1,6 +1,6 @@
 import requests
-from account import Account
-from obj import * 
+from objs.account import * 
+from objs.web_objects import * 
 
 
 
@@ -13,11 +13,8 @@ def main():
         # Access login page
         login_page = LoginPage(ses)
 
-        # Login to E-learning
+        # Login to E-learning and start scanning
         myel = MyELearning(ses, login_page.login(account))
-
-        # Perform scanning
-        myel.get_summary()
 
 
 
