@@ -4,7 +4,7 @@ from objs.web_objects import Quiz
 from bs4 import BeautifulSoup
 
 def test_quiz():
-    with open('quiz_1.html', 'r') as page:
+    with open('tests/quiz_1.html', 'r') as page:
         quiz = Quiz(page, 'Demo quiz')
         due = datetime.strptime('Monday, 30 March 2020, 3:15 PM', '%A, %d %B %Y, %I:%M %p')
 
