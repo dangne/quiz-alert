@@ -5,7 +5,9 @@ You're tired of missing quizzes? You're tired of mailing professors begging for 
 
 List all of your done/undone quizzes (or even assignments!) with a single command.
 
-<img src="/home/dang/Dropbox/workspace/demo.gif" style="zoom:80%;" />
+<p align="center">
+  <img src="https://github.com/dangne/quiz-alert/blob/master/img/demo.gif" style="zoom:80%;" />
+</p>
 
 ## Requirements
 
