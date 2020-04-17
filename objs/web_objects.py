@@ -2,7 +2,7 @@ import requests
 import re
 import objs.colors as colors
 from bs4 import BeautifulSoup
-from datetime import datetime
+from datetime import datetime, timedelta
 
 STATUS_COLOR = {
     'Submitted':colors.GREEN,
@@ -48,9 +48,9 @@ class Quiz:
             else:
                 if self.start != None and self.start > self.start.today():
                     self.status = 'Not opened'
-                elif self.due != None and (self.due - self.due.today()).days <= 0:
+                elif self.due != None and self.due <= self.due.today():
                     self.status = 'Overdue!'
-                elif self.due != None and (self.due - self.due.today()).days <= 3:
+                elif self.due != None and self.due <= self.due.today() + timedelta(days=3):
                     self.status = 'Due soon!'
                 else:
                     self.status = 'Not submitted'
@@ -90,9 +90,9 @@ class Assignment:
             if status_text == 'Đã nộp':
                 self.status = 'Submitted'
             else:
-                if self.due != None and (self.due - self.due.today()).days <= 0:
+                if self.due != None and self.due <= self.due.today():
                     self.status = 'Overdue!'
-                elif self.due != None and (self.due - self.due.today()).days <= 3:
+                elif self.due != None and self.due <= self.due.today() + timedelta(days=3):
                     self.status = 'Due soon!'
                 else:
                     self.status = 'Not submitted'
