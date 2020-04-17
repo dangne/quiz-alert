@@ -1,4 +1,5 @@
 import os
+import stdiomask
 
 
 
@@ -17,7 +18,7 @@ class Account:
     def create_account(self):
         print('-'*10, 'Create account', '-'*10)
         self.username = input('Your username: ')
-        self.password = input('Your password: ')
+        self.password = stdiomask.getpass(prompt='Your password: ')
         self.save_account()
         print('-'*36)
 

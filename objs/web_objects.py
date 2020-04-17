@@ -1,5 +1,6 @@
 import requests
 import re
+import concurrent.futures
 import objs.colors as colors
 from bs4 import BeautifulSoup
 from datetime import datetime, timedelta
@@ -15,9 +16,9 @@ STATUS_COLOR = {
 
 
 class Quiz:
-    def __init__(self, html, name):
+    def __init__(self, html, title):
         self.html = html
-        self.name = name 
+        self.title = title 
         self.start = None
         self.due = None
         self.status = None
@@ -60,16 +61,16 @@ class Quiz:
 
     def show(self):
         color = STATUS_COLOR[self.status]
-        output = ' '*4 + f'{color}Quiz | {str(self.status):13} | Due: {str(self.due):19} | {self.name}'
+        output = ' '*4 + f'{color}Quiz | {str(self.status):13} | Due: {str(self.due):19} | {self.title}'
         output = (output[:110] + '..') if len(output) > 110 else output 
         print(output + colors.DEFAULT)
     
 
 
 class Assignment:
-    def __init__(self, html, name):
+    def __init__(self, html, title):
         self.html = html
-        self.name = name 
+        self.title = title 
         self.due = None
         self.status = None
 
@@ -102,51 +103,81 @@ class Assignment:
 
     def show(self):
         color = STATUS_COLOR[self.status]
-        output = ' '*4 + f'{color}Assm | {str(self.status):13} | Due: {str(self.due):19} | {self.name}'
+        output = ' '*4 + f'{color}Assm | {str(self.status):13} | Due: {str(self.due):19} | {self.title}'
         output = (output[:110] + '..') if len(output) > 110 else output 
         print(output + colors.DEFAULT)
         
 
 
 class Course:
-    def __init__(self, ses, html, name):
+    def __init__(self, ses, html, title):
+        print(' '*2 + f'{title}')
         self.ses = ses
         self.html = html
-        self.name = name
+        self.title = title 
         self.quizzes = []
         self.assignments = []
         self.parse_course()
 
     def parse_course(self):
         soup = BeautifulSoup(self.html, 'html5lib')
-        print_flag = False
 
         # Extract quizzes
-        quizzes = soup.find_all('li', class_='activity quiz modtype_quiz')
-        if len(quizzes) > 0 and not print_flag:
-            print(' '*2 + f'{self.name}')
-            print_flag = True
+        quizzes = soup.find_all(class_='activity quiz modtype_quiz')
 
-        for quiz in quizzes:
-            try: quiz_html = self.ses.get(quiz.find('a')['href']).content
-            except: quiz_html = None
-            quiz_name = quiz.find('span', class_='instancename').contents[0]
-            self.quizzes.append(Quiz(quiz_html, quiz_name))
+        # Get quizzes' titles
+        quizzes_titles = [quiz.span.next_element for quiz in quizzes]
+
+        # Get quizzes' htmls in multiple threads
+        hrefs = self.get_quizzes_hrefs(quizzes)
+
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            quizzes_htmls = executor.map(self.get_quizzes_html, hrefs)
+
+        # Get quiz objects
+        self.quizzes = [Quiz(html, title) for html, title in zip(quizzes_htmls, quizzes_titles)]
 
         # Extract assignments
-        assignments = soup.find_all('li', class_='activity assign modtype_assign')
-        if len(assignments) > 0 and not print_flag:
-            print(' '*2 + f'{self.name}')
-            print_flag = True
+        assignments = soup.find_all(class_='activity assign modtype_assign')
 
+        # Get assignments' titles
+        assignments_titles = [assignment.span.next_element for assignment in assignments]
+
+        # Get assignments' htmls in multiple threads
+        hrefs = self.get_assignments_hrefs(assignments)
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            assignment_htmls = executor.map(self.get_assignments_html, hrefs)
+
+        # Get assignment objects
+        self.assignments = [Assignment(html, title) for html, title in zip(assignment_htmls, assignments_titles)]
+
+    def get_quizzes_html(self, href):
+        try: html = self.ses.get(href).text
+        except: html = None
+        return html
+
+    def get_assignments_html(self, href):
+        try: html = self.ses.get(href).text
+        except: html = None
+        return html
+
+    def get_quizzes_hrefs(self, quizzes):
+        hrefs = []
+        for quiz in quizzes:
+            try: hrefs.append(quiz.a['href'])
+            except: hrefs.append(None)
+
+        return hrefs
+
+    def get_assignments_hrefs(self, assignments):
+        hrefs = []
         for assignment in assignments:
-            try: assignment_html = self.ses.get(assignment.find('a')['href']).content
-            except: assignment_html = None
-            assignment_name = assignment.find('span', class_='instancename').contents[0]
-            self.assignments.append(Assignment(assignment_html, assignment_name))
+            try: hrefs.append(assignment.a['href'])
+            except: hrefs.append(None)
+        return hrefs
 
     def show(self):
-        print(' '*2 + f'{self.name}')
+        print(' '*2 + f'{self.title}')
         for quiz in self.quizzes: quiz.show()
         for assm in self.assignments: assm.show()
 
@@ -160,27 +191,32 @@ class Course:
 
 class MyELearning:
     def __init__(self, ses, html):
+        print('Accessed MyELearning Page')
         self.ses = ses
         self.html = html
         self.courses = []
-
-        print('Accessed MyELearning Page')
         self.parse_myel()
 
     def parse_myel(self):
         soup = BeautifulSoup(self.html, 'html5lib')
-        content = soup.find('div', class_='content')
 
-        start_flag = False
-        for element in content.contents:
-            if element.name == 'span' and not start_flag:
-                start_flag = True
-            elif element.name == 'span' and start_flag:
-                return
-            elif element.name == 'div':
-                course_html = self.ses.get(element.find('a')['href']).content
-                course_name = element.find('a')['title']
-                self.courses.append(Course(self.ses, course_html, course_name))
+        # Get courses in the current semester
+        courses = soup.find('div', class_='content')\
+                      .select('span:nth-of-type(2)')[0]\
+                      .find_previous_siblings('div', class_='course_list')
+
+        courses = list(courses)[::-1]
+
+        # Extract courses' hrefs and titles
+        hrefs = [course.a['href'] for course in courses]
+        titles = [course.a['title'] for course in courses]
+
+        # Crawl courses' htmls in multiple threads
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            htmls = executor.map(lambda href: self.ses.get(href).text, hrefs)
+
+        # Get course objects 
+        self.courses = [Course(self.ses, html, title) for html, title in zip(htmls, titles)]
 
     def show(self):
         for course in self.courses:
@@ -195,11 +231,10 @@ class LoginPage:
     STUDENT_LOGIN_PAGE = 'https://sso.hcmut.edu.vn/cas/login?service=http%3A%2F%2Fe-learning.hcmut.edu.vn%2Flogin%2Findex.php%3FauthCAS%3DCAS'
 
     def __init__(self, ses, url=STUDENT_LOGIN_PAGE):
+        print('Accessed Login Page')
         self.ses = ses
         self.url = url
-        self.html = ses.get(url).content
-
-        print('Accessed Login Page')
+        self.html = ses.get(url).text
         self.parse_login_page()
 
     def parse_login_page(self):
@@ -222,6 +257,6 @@ class LoginPage:
 
     def login(self, account):
         login_data = self.get_login_data(account)
-        response = self.ses.post(self.url, login_data).content
+        response = self.ses.post(self.url, login_data).text
     
         return response
