@@ -135,7 +135,11 @@ class Course:
             quizzes_htmls = executor.map(self.get_quizzes_html, hrefs)
 
         # Get quiz objects
-        self.quizzes = [Quiz(html, title) for html, title in zip(quizzes_htmls, quizzes_titles)]
+        for html, title in zip(quizzes_htmls, quizzes_titles):
+            try:
+                self.quizzes.append(Quiz(html, title))
+            except: 
+                print(' '*4 + f'{colors.GREY}An error occurred while loading quiz {title}{colors.DEFAULT}')
 
         # Extract assignments
         assignments = soup.find_all(class_='activity assign modtype_assign')
@@ -149,7 +153,11 @@ class Course:
             assignment_htmls = executor.map(self.get_assignments_html, hrefs)
 
         # Get assignment objects
-        self.assignments = [Assignment(html, title) for html, title in zip(assignment_htmls, assignments_titles)]
+        for html, title in zip(assignment_htmls, assignments_titles):
+            try:
+                self.assignments.append(Assignment(html, title))
+            except:
+                print(' '*4 + f'{colors.GREY}An error occurred while loading assignment {title}{colors.DEFAULT}')
 
     def get_quizzes_html(self, href):
         try: html = self.ses.get(href).text
@@ -216,7 +224,11 @@ class MyELearning:
             htmls = executor.map(lambda href: self.ses.get(href).text, hrefs)
 
         # Get course objects 
-        self.courses = [Course(self.ses, html, title) for html, title in zip(htmls, titles)]
+        for html, title in zip(htmls, titles):
+            try:
+                self.courses.append(Course(self.ses, html, title))
+            except:
+                print(' '*2 + f'{colors.GREY}An error occurred while loading the course {title}{colors.DEFAULT}')
 
     def show(self):
         for course in self.courses:
