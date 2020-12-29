@@ -208,16 +208,23 @@ class MyELearning:
     def parse_myel(self):
         soup = BeautifulSoup(self.html, 'html5lib')
 
+        '''
         # Get courses in the current semester
         courses = soup.find('div', class_='content')\
-                      .select('span:nth-of-type(2)')[0]\
+                      .select('span:nth-of-type(3)')[0]\
                       .find_previous_siblings('div', class_='course_list')
+        '''
 
-        courses = list(courses)[::-1]
+        # Get courses from a pre-defined list
+        courses = []
+        with open('courses.txt', 'r') as f:
+            for course in f:
+                course = course.rstrip('\n')
+                courses.append(soup.find('a', title=course))
 
         # Extract courses' hrefs and titles
-        hrefs = [course.a['href'] for course in courses]
-        titles = [course.a['title'] for course in courses]
+        hrefs = [course['href'] for course in courses]
+        titles = [course['title'] for course in courses]
 
         # Crawl courses' htmls in multiple threads
         with concurrent.futures.ThreadPoolExecutor() as executor:
